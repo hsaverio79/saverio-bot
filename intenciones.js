@@ -1,12 +1,26 @@
-function detectarIntencion(mensaje) {
-  const texto = mensaje.toLowerCase();
+// intenciones.js
+function normalizeText(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // elimina diacr√≠ticos
+    .toLowerCase()
+    .trim();
+}
 
-  if (texto.includes("motor") || texto.includes("frenos") || texto.includes("suspensi®Æn")) {
-    return "sistema";
+function detectarIntencion(mensaje) {
+  const texto = normalizeText(mensaje);
+
+  if (!texto) return "desconocida";
+
+  const sistemaKeywords = ["motor", "freno", "frenos", "suspension", "suspensi", "transmision", "embrague"];
+  const sintomaKeywords = ["vibra", "vibrar", "ruido", "huele", "olor", "calienta", "falla"];
+
+  for (const k of sistemaKeywords) {
+    if (texto.includes(k)) return "sistema";
   }
 
-  if (texto.includes("vibra") || texto.includes("ruido") || texto.includes("huele")) {
-    return "sintoma";
+  for (const k of sintomaKeywords) {
+    if (texto.includes(k)) return "sintoma";
   }
 
   return "desconocida";
