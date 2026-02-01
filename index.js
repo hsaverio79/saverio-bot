@@ -2,9 +2,11 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");   // ← agregado
 const { botRespond } = require("./botRespond");
 
 const app = express();
+app.use(helmet());                  // ← agregado
 app.use(cors());
 app.use(express.json({ limit: "100kb" }));
 
