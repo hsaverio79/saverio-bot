@@ -1,29 +1,50 @@
 // intenciones.js
+
 function normalizeText(text) {
   return String(text || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // elimina diacríticos
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
 
-function detectarIntencion(mensaje) {
-  const texto = normalizeText(mensaje);
+const palabrasSistema = [
+  "motor", "freno", "frenos", "suspension", "direccion",
+  "transmision", "embrague", "bateria", "alternador",
+  "radiador", "refrigeracion", "escape", "inyeccion"
+];
 
-  if (!texto) return "desconocida";
+const palabrasSintoma = [
+  "ruido", "golpe", "vibracion", "vibra", "humo",
+  "falla", "apagado", "no enciende", "calienta",
+  "temperatura", "tironeo", "jaloneo", "pierde fuerza"
+];
 
-  const sistemaKeywords = ["motor", "freno", "frenos", "suspension", "suspensi", "transmision", "embrague"];
-  const sintomaKeywords = ["vibra", "vibrar", "ruido", "huele", "olor", "calienta", "falla"];
+const saludos = ["hola", "buenas", "saludos", "que tal"];
+const despedidas = ["gracias", "hasta luego", "adios", "nos vemos"];
 
-  for (const k of sistemaKeywords) {
-    if (texto.includes(k)) return "sistema";
+function detectarIntencion(texto) {
+  const limpio = normalizeText(texto);
+
+  if (!limpio) return { tipo: "desconocido" };
+
+  if (saludos.some(s => limpio.includes(s))) {
+    return { tipo: "saludo" };
   }
 
-  for (const k of sintomaKeywords) {
-    if (texto.includes(k)) return "sintoma";
+  if (despedidas.some(d => limpio.includes(d))) {
+    return { tipo: "despedida" };
   }
 
-  return "desconocida";
+  if (palabrasSistema.some(p => limpio.includes(p))) {
+    return { tipo: "sistema" };
+  }
+
+  if (palabrasSintoma.some(p => limpio.includes(p))) {
+    return { tipo: "sintoma" };
+  }
+
+  return { tipo: "desconocido" };
 }
 
 module.exports = { detectarIntencion };
