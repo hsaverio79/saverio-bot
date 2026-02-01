@@ -1,26 +1,43 @@
+// botRespond.js
 const { detectarIntencion } = require("./intenciones");
 const { diagnosticoPorSistema } = require("./sistemas");
 const { diagnosticoPorSintoma } = require("./sintomas");
 
-async function botRespond(rawMensaje) {
+function normalizeText(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+async function botRespond(mensaje) {
   try {
-    const mensaje = (typeof rawMensaje === "string") ? rawMensaje.trim() : "";
-    if (!mensaje) return "No recibí un mensaje válido. Por favor escribe tu síntoma o sistema afectado.";
+    const limpio = normalizeText(mensaje);
+    if (!limpio) return "Necesito que me envíes un mensaje válido.";
 
-    const intencion = await Promise.resolve(detectarIntencion(mensaje));
+    const intencion = detectarIntencion(limpio);
 
-    if (intencion === "sistema") {
-      return await Promise.resolve(diagnosticoPorSistema(mensaje));
+    switch (intencion.tipo) {
+      case "sistema":
+        return diagnosticoPorSistema(limpio);
+
+      case "sintoma":
+        return diagnosticoPorSintoma(limpio);
+
+      case "saludo":
+        return "Hola, soy el asistente técnico de Saverio Motors. ¿Qué problema presenta tu vehículo?";
+
+      case "despedida":
+        return "Gracias por comunicarte con Saverio Motors. ¡Estamos para ayudarte!";
+
+      default:
+        return "No logré identificar el sistema o síntoma. ¿Puedes describir el problema con más detalle?";
     }
 
-    if (intencion === "sintoma") {
-      return await Promise.resolve(diagnosticoPorSintoma(mensaje));
-    }
-
-    return "No pude entender tu mensaje. ¿Puedes describir el problema con más detalle?";
   } catch (err) {
-    console.error("botRespond error:", err && err.stack ? err.stack : err);
-    return "Ocurrió un error procesando tu mensaje. Intenta de nuevo más tarde.";
+    console.error("Error en botRespond:", err);
+    return "Ocurrió un error procesando tu mensaje. Intenta nuevamente.";
   }
 }
 
