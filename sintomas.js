@@ -1,4 +1,5 @@
 // sintomas.js
+
 function normalizeText(text) {
   return String(text || "")
     .normalize("NFD")
@@ -7,29 +8,32 @@ function normalizeText(text) {
     .trim();
 }
 
-async function diagnosticoPorSintoma(rawMensaje) {
-  try {
-    const texto = normalizeText(rawMensaje);
-    if (!texto) return "No se detectó un síntoma. Describe lo que notas en el vehículo.";
+const respuestasSintoma = {
+  ruido: "Un ruido puede indicar desgaste en suspensión, frenos, rodamientos o piezas sueltas. Se recomienda inspección en elevador.",
+  golpe: "Un golpe al pasar baches o al girar suele ser por bujes, rótulas o amortiguadores dañados.",
+  vibracion: "Las vibraciones pueden venir de llantas desbalanceadas, soportes de motor o problemas en la transmisión.",
+  vibra: "Las vibraciones pueden venir de llantas desbalanceadas, soportes de motor o problemas en la transmisión.",
+  humo: "El humo puede indicar problemas de combustión, aceite quemándose o fallas en el sistema de escape.",
+  falla: "Una falla puede deberse a sensores, inyección, bobinas o problemas eléctricos.",
+  apagado: "Si el vehículo se apaga, puede ser por bomba de combustible, sensores o fallas eléctricas.",
+  "no enciende": "Si no enciende, revisa batería, alternador, motor de arranque o fusibles.",
+  calienta: "El sobrecalentamiento puede deberse a radiador, termostato, bomba de agua o ventilador.",
+  temperatura: "Si sube la temperatura, revisa refrigerante, fugas o ventiladores.",
+  tironeo: "El tironeo suele ser por inyectores sucios, bobinas o problemas de combustible.",
+  jaloneo: "El jaloneo suele ser por inyectores sucios, bobinas o problemas de combustible.",
+  "pierde fuerza": "La pérdida de fuerza puede deberse a filtro de aire, combustible, turbo, inyección o sensores."
+};
 
-    const mapa = [
-      { keys: ["vibra", "vibrar", "vibracion", "vibración"], reply: "La vibración puede deberse a frenos deformados, problemas en la suspensión, balanceo de ruedas o problemas en los soportes del motor." },
-      { keys: ["ruido", "ruidos", "chasquido", "golpeteo", "clonque"], reply: "El ruido puede venir de piezas sueltas, desgaste, falta de lubricación, cojinetes dañados o problemas en la transmisión." },
-      { keys: ["huele", "olor", "huele a", "huele a quemado", "olor a quemado"], reply: "Un olor extraño puede indicar fuga de líquidos, sobrecalentamiento, fricción excesiva o problemas eléctricos." },
-      { keys: ["fuga", "goteo", "pierde", "pierde liquido"], reply: "Una fuga puede ser de aceite, refrigerante o combustible; es importante revisar el origen y no conducir si es grave." }
-    ];
+function diagnosticoPorSintoma(texto) {
+  const limpio = normalizeText(texto);
 
-    for (const item of mapa) {
-      for (const k of item.keys) {
-        if (texto.includes(k)) return item.reply;
-      }
+  for (const sintoma in respuestasSintoma) {
+    if (limpio.includes(sintoma)) {
+      return respuestasSintoma[sintoma];
     }
-
-    return "No se detectó un síntoma específico. Intenta describir cuándo ocurre el problema (al frenar, al acelerar, en frío, en caliente).";
-  } catch (err) {
-    console.error("diagnosticoPorSintoma error:", err && err.stack ? err.stack : err);
-    return "Ocurrió un error al analizar el síntoma. Intenta describirlo de otra forma o inténtalo más tarde.";
   }
+
+  return "No pude identificar el síntoma exacto. ¿Puedes describir con más detalle qué hace el vehículo?";
 }
 
 module.exports = { diagnosticoPorSintoma };
