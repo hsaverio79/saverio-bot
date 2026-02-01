@@ -36,6 +36,11 @@ app.get(`${BASE_PATH}/health`, (req, res) => {
   res.json({ ok: true, status: "up" });
 });
 
+// ⭐ NUEVO ENDPOINT PARA PRUEBA
+app.get(`${BASE_PATH}/send-test`, (req, res) => {
+  res.json({ ok: true, message: "Test endpoint working" });
+});
+
 // Endpoint principal
 app.post(`${BASE_PATH}/mensaje`, async (req, res) => {
   try {
