@@ -13,8 +13,8 @@ app.use(helmet());
 
 // Rate limiting global
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minuto
-  max: 100,            // 100 requests por minuto
+  windowMs: 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -26,22 +26,28 @@ app.use(express.json({ limit: "100kb" }));
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const BASE_PATH = "/botapp";
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
 function log(...args) {
   console.log(new Date().toISOString(), ...args);
 }
 
-// Healthcheck
-app.get(`${BASE_PATH}/health`, (req, res) => {
-  res.json({ ok: true, status: "up" });
+// ✅ Verificación de Webhook (GET)
+app.get(`${BASE_PATH}/mensaje`, (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    log("✅ Webhook verificado correctamente");
+    return res.status(200).send(challenge);
+  } else {
+    log("❌ Fallo en verificación de webhook");
+    return res.sendStatus(403);
+  }
 });
 
-// ⭐ NUEVO ENDPOINT PARA PRUEBA
-app.get(`${BASE_PATH}/send-test`, (req, res) => {
-  res.json({ ok: true, message: "Test endpoint working" });
-});
-
-// Endpoint principal
+// ✅ Recepción de mensajes (POST)
 app.post(`${BASE_PATH}/mensaje`, async (req, res) => {
   try {
     const mensaje = req.body?.mensaje ? String(req.body.mensaje) : "";
@@ -53,23 +59,33 @@ app.post(`${BASE_PATH}/mensaje`, async (req, res) => {
     res.json({ ok: true, respuesta });
 
   } catch (err) {
-    log("Error in /mensaje:", err?.stack || err);
+    log("Error en /mensaje:", err?.stack || err);
     res.status(500).json({ ok: false, error: "Internal server error" });
   }
 });
 
-// Servidor + apagado elegante
-let server = app.listen(PORT, () => log(`Server listening on ${PORT}`));
+// ✅ Endpoint de prueba
+app.get(`${BASE_PATH}/send-test`, (req, res) => {
+  res.json({ ok: true, message: "Test endpoint working" });
+});
+
+// ✅ Healthcheck
+app.get(`${BASE_PATH}/health`, (req, res) => {
+  res.json({ ok: true, status: "up" });
+});
+
+// ✅ Servidor + apagado elegante
+let server = app.listen(PORT, () => log(`🚀 Servidor activo en puerto ${PORT}`));
 
 const shutdown = (signal) => {
-  log(`Received ${signal}. Shutting down gracefully...`);
+  log(`⚠️ Recibido ${signal}. Cerrando servidor...`);
   server.close(() => {
-    log("HTTP server closed.");
+    log("🛑 Servidor cerrado.");
     process.exit(0);
   });
 
   setTimeout(() => {
-    log("Forcing shutdown.");
+    log("⏱️ Apagado forzado.");
     process.exit(1);
   }, 10000).unref();
 };
